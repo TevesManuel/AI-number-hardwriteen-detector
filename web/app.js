@@ -12,9 +12,10 @@ function clean_function() {
 }
 
 function predict_function() {
+    document.getElementById("output").innerHTML = "Processing...";
+    
     //parse canvas to 28x28
     resample_single(canvas, 28, 28, smallcanvas);
-    document.getElementById("working-feedback").style.backgroundColor = "rgb(255, 0, 0)"
 
     var imgData = ctx2.getImageData(0,0,28,28);
     var arr = []; //El arreglo completo
@@ -34,7 +35,6 @@ function predict_function() {
     var mayorIndice = resultados.indexOf(Math.max.apply(null, resultados));
     
     document.getElementById("output").innerHTML = mayorIndice;
-    document.getElementById("working-feedback").style.backgroundColor = "rgb(0, 255, 0)"
 }
 
 /**
