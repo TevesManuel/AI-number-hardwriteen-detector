@@ -3,7 +3,8 @@ import time
 current_time = time.time()
 
 import sys
-sys.setrecursionlimit(100000000)
+#32 Bit max C INT value ( for greater compatibility between systems )
+sys.setrecursionlimit(2**31 - 1)
 
 count_libraries = 4
 print("Loading libraries...")
@@ -18,9 +19,11 @@ import tensorflow_datasets as tfds
 print("4/" + str(count_libraries) + " loaded")
 print("Libraries has been loaded in " + str(time.time() - current_time) + "s")
 
+print("Getting dataset...")
 ds, metadata = tfds.load('mnist', data_dir="./Datasets/", as_supervised=True, with_info=True, shuffle_files=True)
 # assert isinstance(ds, tf.data.Dataset)
 # print(ds)
+print("Dataset has downloaded.")
 
 trainer_data = ds['train']
 
@@ -35,32 +38,12 @@ def normalize(image, label):
 
 trainer_data = trainer_data.map(normalize)
 
-# for image, label in trainer_data.take(1):
-#   break
-# image = image.numpy().reshape((28, 28))
-
-# plt.figure()
-# plt.imshow(image, cmap=plt.cm.binary)
-# plt.colorbar()
-# plt.grid(False)
-# plt.show()
-
-# plt.figure(figsize=(10, 10))
-# for i, (image, label) in enumerate(trainer_data.take(25)):
-#   image = image.numpy().reshape((28, 28))
-#   plt.subplot(5, 5, i + 1)
-#   plt.xticks([])
-#   plt.yticks([])
-#   plt.grid(False)
-#   plt.imshow(image, cmap=plt.cm.binary)
-#   plt.xlabel(names_of_clases[label])
-# plt.show()
-
 model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3, 3), input_shape=(28, 28, 1), activation="relu"),
+    tf.keras.layers.Input(shape=(28, 28, 1)),
+    tf.keras.layers.Conv2D(32, (3, 3), activation="relu", kernel_initializer="he_normal", name="conv1"),
     tf.keras.layers.MaxPooling2D(2, 2),
 
-    tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
+    tf.keras.layers.Conv2D(64, (3, 3), activation="relu", kernel_initializer="he_normal", name="conv2"),
     tf.keras.layers.MaxPooling2D(2, 2),
 
     tf.keras.layers.Dropout(0.5),
@@ -86,11 +69,12 @@ SIZE_OF_BATCH = 32
 
 trainer_data = trainer_data.repeat().shuffle(metadata.splits['train'].num_examples).batch(SIZE_OF_BATCH)
 
-history = model.fit(trainer_data, epochs=50, steps_per_epoch=math.ceil(metadata.splits['train'].num_examples/SIZE_OF_BATCH))
+history = model.fit(trainer_data, epochs=5, steps_per_epoch=math.ceil(metadata.splits['train'].num_examples/SIZE_OF_BATCH))
 
 plt.xlabel("# Epoch")
 plt.ylabel("# Lost magnitude")
 plt.plot(history.history["loss"])
+plt.show()
 
 model.save("ModelNumbers.h5")
 
