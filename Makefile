@@ -1,5 +1,10 @@
 fit:
-	py ./src/Trainer/app.py
+	python ./src/Trainer/app.py
+to_js:
+	pip install tensorflowjs
+	mkdir tfjs_target_dir
+	tensorflowjs_converter --input_format keras ModelNumbers.h5 tfjs_target_dir
+	ls
 clean_datasets:
 	rm ./Datasets/ -r
 clean_model:
@@ -11,4 +16,4 @@ clean_all:
 	rm ./ModelNumbers.h5
 	rm ./tfjs_model -r -f
 test_01:
-	py ./src/Tests/test_01.py
+	python ./src/Tests/test_01.py
