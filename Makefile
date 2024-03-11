@@ -5,6 +5,8 @@ to_js:
 	mkdir tfjs_target_dir
 	tensorflowjs_converter --input_format keras ModelNumbers.h5 tfjs_target_dir
 	ls
+view_struct:
+	py ./src/Trainer/summary.py
 clean_datasets:
 	rm ./Datasets/ -r
 clean_model:
