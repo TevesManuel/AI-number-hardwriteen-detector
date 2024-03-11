@@ -1,6 +1,6 @@
 import time
 
-current_time = time.time()
+init_time = time.time()
 
 import sys
 #32 Bit max C INT value ( for greater compatibility between systems )
@@ -17,7 +17,7 @@ import tensorflow as tf
 print("3/" + str(count_libraries) + " loaded")
 import tensorflow_datasets as tfds
 print("4/" + str(count_libraries) + " loaded")
-print("Libraries has been loaded in " + str(time.time() - current_time) + "s")
+print("Libraries has been loaded in " + str(time.time() - init_time) + "s")
 
 print("Getting dataset...")
 ds, metadata = tfds.load('mnist', data_dir="./Datasets/", as_supervised=True, with_info=True, shuffle_files=True)
@@ -84,4 +84,4 @@ model.save("ModelNumbers.h5")
 # !tensorflowjs_converter --input_format keras ModelNumbers.h5 tfjs_target_dir
 # !ls
 
-print("The program has been runned in " + str(time.time() - current_time) + "s")
+print("The program has been runned in " + str(time.time() - init_time) + "s")

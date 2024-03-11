@@ -1,5 +1,7 @@
 fit:
 	py ./src/Trainer/app.py
+view_struct:
+	py ./src/Trainer/summary.py
 clean_datasets:
 	rm ./Datasets/ -r
 clean_model:
