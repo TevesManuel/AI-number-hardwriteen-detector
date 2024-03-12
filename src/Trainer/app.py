@@ -20,12 +20,18 @@ print("4/" + str(count_libraries) + " loaded")
 print("Libraries has been loaded in " + str(time.time() - init_time) + "s")
 
 print("Getting dataset...")
+
+#tfs.load flags
+#data_dir is the dir where the dataset are downloaded
+#as_supervised is for the ds give image and label
+#with_info is for the function return metadata too
+#shuffle_files is for shufle data
 ds, metadata = tfds.load('mnist', data_dir="./Datasets/", as_supervised=True, with_info=True, shuffle_files=True)
-# assert isinstance(ds, tf.data.Dataset)
-# print(ds)
+
 print("Dataset has downloaded.")
 
 trainer_data = ds['train']
+trainer_data = trainer_data.cache() #Pass to the cache for more velocity
 
 names_of_clases = metadata.features['label'].names
 
@@ -69,7 +75,7 @@ SIZE_OF_BATCH = 32
 
 trainer_data = trainer_data.repeat().shuffle(metadata.splits['train'].num_examples).batch(SIZE_OF_BATCH)
 
-history = model.fit(trainer_data, epochs=5, steps_per_epoch=math.ceil(metadata.splits['train'].num_examples/SIZE_OF_BATCH))
+history = model.fit(trainer_data, epochs=50, steps_per_epoch=math.ceil(metadata.splits['train'].num_examples/SIZE_OF_BATCH))
 
 plt.xlabel("# Epoch")
 plt.ylabel("# Lost magnitude")
@@ -77,11 +83,5 @@ plt.plot(history.history["loss"])
 plt.show()
 
 model.save("ModelNumbers.h5")
-
-#En el terminal
-# !pip install tensorflowjs
-# !mkdir tfjs_target_dir
-# !tensorflowjs_converter --input_format keras ModelNumbers.h5 tfjs_target_dir
-# !ls
 
 print("The program has been runned in " + str(time.time() - init_time) + "s")
