@@ -23,19 +23,24 @@ results = []
 i = 0
 for image, label in ds:
     predict = model.predict([tf.reshape(image, [-1, 28, 28, 1])])
-    # print(tf.argmax(predict, axis=1).numpy()[0])
-    # print("LABEL:" + str(label.numpy()))
-    # print(tf.argmax(predict, axis=1).numpy()[0] == label.numpy())
+    # print(tf.argmax(predict, axis=1).numpy()[0]) # Result of the prediction
+    # print("LABEL:" + str(label.numpy())) # Expectation result
+    # print(tf.argmax(predict, axis=1).numpy()[0] == label.numpy()) # Comparassion beetween prediction and the expectation
     results.append(tf.argmax(predict, axis=1).numpy()[0] == label.numpy())
     print(str(i) + "/" + str(len(ds)))
     i += 1
 
+
+#Counting Trues in the comparassions
 ok = 0
 for i in results:
     if i == True:
         ok+=1
-print(len(results))
-print(ok)
-print("Acuraccy: " + str(ok/len(results)*100) + "%")
+
+#Calculating acuraccy
+acuraccy = ok/len(results)*100
+
+print("Acuraccy: " + str(acuraccy) + "%")
+
 print("Libraries has been loaded in " + str(time.time() - init_time) + "s")
 print("The test has been runned in " + str(time.time() - init_time) + "s")

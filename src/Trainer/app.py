@@ -6,7 +6,7 @@ import sys
 #32 Bit max C INT value ( for greater compatibility between systems )
 sys.setrecursionlimit(2**31 - 1)
 
-count_libraries = 4
+count_libraries = 5
 print("Loading libraries...")
 print("0/" + str(count_libraries) + " loaded")
 import matplotlib.pyplot as plt
@@ -17,7 +17,18 @@ import tensorflow as tf
 print("3/" + str(count_libraries) + " loaded")
 import tensorflow_datasets as tfds
 print("4/" + str(count_libraries) + " loaded")
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+print("5/" + str(count_libraries) + " loaded")
+
 print("Libraries has been loaded in " + str(time.time() - init_time) + "s")
+
+
+BATCH_SIZE = 32
+
+def normalize(image, label):
+  image = tf.cast(image, tf.float32)
+  image /= 255
+  return image, label
 
 print("Getting dataset...")
 
@@ -33,17 +44,48 @@ print("Dataset has downloaded.")
 trainer_data = ds['train']
 trainer_data = trainer_data.cache() #Pass to the cache for more velocity
 
+#Geting names of the clasess
 names_of_clases = metadata.features['label'].names
-
-# print("names of the classes" + str(names_of_clases))
-
-def normalize(image, label):
-  image = tf.cast(image, tf.float32)
-  image /= 255
-  return image, label
 
 trainer_data = trainer_data.map(normalize)
 
+# Define data generator with my flags
+datagen = ImageDataGenerator(
+    rotation_range=10,  # Range of the random rotation
+    width_shift_range=0.1,  # Desplazamiento horizontal aleatorio
+    height_shift_range=0.1,  # Desplazamiento vertical aleatorio
+    shear_range=0.1,  # Estiramiento aleatorio
+    zoom_range=0.1,  # Rango de zoom aleatorio
+    horizontal_flip=False,  # Volteo horizontal aleatorio
+    vertical_flip=False,  # Volteo vertical aleatorio
+    fill_mode='nearest'  # Método de relleno para píxeles nuevos generados
+)
+
+trainer_data_images_np = []
+trainer_data_labels_np = []
+
+print("passing dataset to np array")
+for image, label in trainer_data:
+  trainer_data_images_np.append(image.numpy())
+  trainer_data_labels_np.append(label.numpy())
+
+trainer_data_images_np = np.array(trainer_data_images_np)
+trainer_data_labels_np = np.array(trainer_data_labels_np)
+
+datagen.fit(trainer_data_images_np)
+
+print("Dataset has been converted correctly.")
+
+# Aplica las transformaciones y genera lotes de datos aumentados
+trainer_data = datagen.flow(
+    trainer_data_images_np,
+    trainer_data_labels_np,
+    batch_size=BATCH_SIZE,
+    shuffle=True
+)
+
+
+#Struct of the neural network
 model = tf.keras.Sequential([
     tf.keras.layers.Input(shape=(28, 28, 1)),
     tf.keras.layers.Conv2D(32, (3, 3), activation="relu", kernel_initializer="he_normal", name="conv1"),
@@ -56,26 +98,25 @@ model = tf.keras.Sequential([
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(100, activation=tf.nn.relu),
     tf.keras.layers.Dense(10, activation=tf.nn.softmax),
-
-    # tf.keras.layers.Flatten(input_shape=(28, 28, 1)),
-    # tf.keras.layers.Dense(50, activation=tf.nn.relu),
-    # tf.keras.layers.Dense(10, activation=tf.nn.relu),
-    # tf.keras.layers.Dense(10, activation=tf.nn.softma x),
 ])
 
+#Construct the neural network
 model.compile(
     optimizer='adam',
     loss=tf.keras.losses.SparseCategoricalCrossentropy(),
     metrics=['accuracy']
 )
 
-import math
-
 SIZE_OF_BATCH = 32
 
-trainer_data = trainer_data.repeat().shuffle(metadata.splits['train'].num_examples).batch(SIZE_OF_BATCH)
+#Batch is a Data Set, in this case each batch is 32 data
+# trainer_data = trainer_data.repeat().shuffle(metadata.splits['train'].num_examples).batch(SIZE_OF_BATCH)
 
-history = model.fit(trainer_data, epochs=50, steps_per_epoch=math.ceil(metadata.splits['train'].num_examples/SIZE_OF_BATCH))
+history = model.fit(
+                    trainer_data,
+                    epochs=5,
+                    steps_per_epoch=np.ceil(metadata.splits['train'].num_examples/SIZE_OF_BATCH)
+                   )
 
 plt.xlabel("# Epoch")
 plt.ylabel("# Lost magnitude")
