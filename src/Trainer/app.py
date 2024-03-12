@@ -23,9 +23,10 @@ print("5/" + str(count_libraries) + " loaded")
 
 print("Libraries has been loaded in " + str(time.time() - init_time) + "s")
 
-
+#Batch is a Data Set, in this case each batch is 32 data
 BATCH_SIZE = 32
 
+#Verify the correct struct & pass to value between 0.0 & 1.0 for more efficiency
 def normalize(image, label):
   image = tf.cast(image, tf.float32)
   image /= 255
@@ -44,7 +45,7 @@ print("Dataset has downloaded.")
 
 trainer_data = ds['train']
 trainer_data = trainer_data.cache() #Pass to the cache for more velocity
-trainer_data = trainer_data.batch(32)
+trainer_data = trainer_data.repeat().shuffle(metadata.splits['train'].num_examples).batch(BATCH_SIZE) #Shufle data
 
 #Geting names of the clasess
 names_of_clases = metadata.features['label'].names
@@ -63,22 +64,24 @@ datagen = ImageDataGenerator(
     fill_mode='nearest'  # Método de relleno para píxeles nuevos generados
 )
 
+print("passing dataset to np array")
+
+#Convert Dataset to np Array
 trainer_data_images_np = []
 trainer_data_labels_np = []
 
-print("passing dataset to np array")
 for image, label in trainer_data:
   trainer_data_images_np.append(image.numpy())
   trainer_data_labels_np.append(label.numpy())
-
 trainer_data_images_np = np.array(trainer_data_images_np)
 trainer_data_labels_np = np.array(trainer_data_labels_np)
 
+#Make some changes over images
 datagen.fit(trainer_data_images_np)
 
 print("Dataset has been converted correctly.")
 
-# Aplica las transformaciones y genera lotes de datos aumentados
+# Apply transforms and generate batchs
 trainer_data = datagen.flow(
     trainer_data_images_np,
     trainer_data_labels_np,
@@ -109,15 +112,10 @@ model.compile(
     metrics=['accuracy']
 )
 
-SIZE_OF_BATCH = 32
-
-#Batch is a Data Set, in this case each batch is 32 data
-# trainer_data = trainer_data.repeat().shuffle(metadata.splits['train'].num_examples).batch(SIZE_OF_BATCH)
-
 history = model.fit(
                     trainer_data,
                     epochs=5,
-                    steps_per_epoch=np.ceil(metadata.splits['train'].num_examples/SIZE_OF_BATCH)
+                    steps_per_epoch=np.ceil(metadata.splits['train'].num_examples/BATCH_SIZE)
                    )
 
 plt.xlabel("# Epoch")
