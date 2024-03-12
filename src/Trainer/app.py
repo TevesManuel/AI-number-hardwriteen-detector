@@ -20,6 +20,7 @@ print("4/" + str(count_libraries) + " loaded")
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 print("5/" + str(count_libraries) + " loaded")
 
+
 print("Libraries has been loaded in " + str(time.time() - init_time) + "s")
 
 
@@ -43,6 +44,7 @@ print("Dataset has downloaded.")
 
 trainer_data = ds['train']
 trainer_data = trainer_data.cache() #Pass to the cache for more velocity
+trainer_data = trainer_data.batch(32)
 
 #Geting names of the clasess
 names_of_clases = metadata.features['label'].names
