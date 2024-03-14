@@ -122,7 +122,7 @@ print("DS LEN " + str(len(trainer_data)))
 history = model.fit(
                     trainer_data,
                     epochs=TRAINING_EPOCHS,
-                    steps_per_epoch=int(np.ceil(len(trainer_data)/BATCH_SIZE))
+                    steps_per_epoch=int(np.ceil(len(trainer_data)))
                    )
 
 
