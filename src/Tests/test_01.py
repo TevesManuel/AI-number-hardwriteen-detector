@@ -9,8 +9,9 @@ print("1/2 loaded")
 import tensorflow_datasets as tfds
 print("2/2 loaded")
 from keras.models import load_model
+from tqdm import tqdm
 
-ds = tfds.load('mnist', split="test", as_supervised=True)
+ds = tfds.load('mnist', split="test", as_supervised=True, shuffle_files=True)
 
 ds = ds.cache() #Pass the dataset to the memory for more velocity
 
@@ -19,16 +20,15 @@ ds = ds.cache() #Pass the dataset to the memory for more velocity
 
 model = load_model("./ModelNumbers.h5")
 
+num_samples = 100 # Max 10000
+
 results = []
-i = 0
-for image, label in ds:
-    predict = model.predict([tf.reshape(image, [-1, 28, 28, 1])])
+for image, label in tqdm(ds.take(num_samples), total=num_samples, desc="Testing...", colour='#00ff00', ncols=100):
+    predict = model.predict([tf.reshape(image, [-1, 28, 28, 1])], verbose=0)
     # print(tf.argmax(predict, axis=1).numpy()[0]) # Result of the prediction
     # print("LABEL:" + str(label.numpy())) # Expectation result
     # print(tf.argmax(predict, axis=1).numpy()[0] == label.numpy()) # Comparassion beetween prediction and the expectation
     results.append(tf.argmax(predict, axis=1).numpy()[0] == label.numpy())
-    print(str(i) + "/" + str(len(ds)))
-    i += 1
 
 
 #Counting Trues in the comparassions
@@ -39,6 +39,8 @@ for i in results:
 
 #Calculating acuraccy
 acuraccy = ok/len(results)*100
+# print(ok)
+# print(len(results))
 
 print("Acuraccy: " + str(acuraccy) + "%")
 
