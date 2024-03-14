@@ -1,6 +1,6 @@
 fit:
 	python ./src/Trainer/app.py
-to_js:
+tojs:
 	tensorflowjs_converter --input_format keras ModelNumbers.h5 tfjs
 	ls
 convert:
