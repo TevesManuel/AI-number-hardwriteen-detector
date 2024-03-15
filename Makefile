@@ -25,9 +25,9 @@ clean_all:
 run_server:
 	python -m http.server 8000
 test_01:
-	python ./src/Tests/test_01.py
+	python ./Tests/test_01.py
 all:
 	python ./src/Trainer/app.py
-	python ./src/Tests/test_01.py
+	python ./Tests/test_01.py
 	tensorflowjs_converter --input_format keras ModelNumbers.h5 tfjs
 	python -m http.server 8000

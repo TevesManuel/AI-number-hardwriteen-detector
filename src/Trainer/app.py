@@ -1,7 +1,6 @@
-#Batch is a Data Set, in this case each batch is 32 data
-BATCH_SIZE = 32
+
 #Epochs of the training
-TRAINING_EPOCHS = 50
+TRAINING_EPOCHS = 1000
 
 import time
 
@@ -14,7 +13,7 @@ sys.setrecursionlimit(2**31 - 1)
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '4'#Disable all warnings, except FATAL ERR
 
-count_libraries = 6
+count_libraries = 7
 print("Loading libraries...")
 print("0/" + str(count_libraries) + " loaded")
 import matplotlib.pyplot as plt
@@ -30,37 +29,51 @@ print("5/" + str(count_libraries) + " loaded")
 from tqdm import tqdm
 print("6/" + str(count_libraries) + " loaded")
 
+os.environ['PYTHONPATH'] = './src/'#For import Generalities
+from Generalities import normalize
+from Generalities import BATCH_SIZE
+print("7/" + str(count_libraries) + " loaded")
+
 print("Libraries has been loaded in " + str(time.time() - init_time) + "s")
-
-#Verify the correct struct & pass to value between 0.0 & 1.0 for more efficiency
-def normalize(image, label):
-  image = tf.cast(image, tf.float32)
-  image /= 255
-  return image, label
-
-print("Getting dataset...")
 
 #Struct of the neural network
 model = tf.keras.Sequential([
-    tf.keras.layers.Input(shape=(28, 28, 1)),
+      tf.keras.layers.Input(shape=(28, 28, 1)),
     tf.keras.layers.Conv2D(32, (3, 3), activation="relu", kernel_initializer="he_normal", name="conv1"),
     tf.keras.layers.MaxPooling2D(2, 2),
 
     tf.keras.layers.Conv2D(64, (3, 3), activation="relu", kernel_initializer="he_normal", name="conv2"),
     tf.keras.layers.MaxPooling2D(2, 2),
 
+    tf.keras.layers.Conv2D(128, (3,3), activation='relu', kernel_initializer="he_normal", name="conv3"),
+    tf.keras.layers.MaxPooling2D(2, 2),
+
     tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(100, activation=tf.nn.relu),
+    tf.keras.layers.Dense(250, activation=tf.nn.relu),
     tf.keras.layers.Dense(10, activation='softmax'),
+
+    # tf.keras.layers.Input(shape=(28, 28, 1)),
+    # tf.keras.layers.Conv2D(32, (3,3), activation='relu'),
+    # tf.keras.layers.MaxPooling2D(2, 2),
+    # tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+    # tf.keras.layers.MaxPooling2D(2, 2),
+    # tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
+    # tf.keras.layers.MaxPooling2D(2, 2),
+
+    # tf.keras.layers.Dropout(0.5),
+    # tf.keras.layers.Flatten(),
+    # tf.keras.layers.Dense(250, activation='relu'),
+    # tf.keras.layers.Dense(1, activation='softmax')
 ])
 
 #Construct the neural network
-model.compile(
-    optimizer='adam',
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-    metrics=['accuracy']
-)
+model.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+              metrics=['accuracy'])
+
+
+print("Getting dataset...")
 
 #tfs.load flags
 #data_dir is the dir where the dataset are downloaded
@@ -121,8 +134,10 @@ print("DS LEN " + str(len(trainer_data)))
 
 history = model.fit(
                     trainer_data,
+                    batch_size=BATCH_SIZE,
+                    # validation_split=0.15,
                     epochs=TRAINING_EPOCHS,
-                    steps_per_epoch=int(np.ceil(len(trainer_data)))
+                    steps_per_epoch=int(np.ceil(len(trainer_data)/BATCH_SIZE))
                    )
 
 
