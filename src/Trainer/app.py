@@ -1,11 +1,19 @@
+
+#Epochs of the training
+TRAINING_EPOCHS = 1000
+
 import time
 
-current_time = time.time()
+init_time = time.time()
 
 import sys
-sys.setrecursionlimit(100000000)
+#32 Bit max C INT value ( for greater compatibility between systems )
+sys.setrecursionlimit(2**31 - 1)
 
-count_libraries = 4
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '4'#Disable all warnings, except FATAL ERR
+
+count_libraries = 7
 print("Loading libraries...")
 print("0/" + str(count_libraries) + " loaded")
 import matplotlib.pyplot as plt
@@ -16,88 +24,128 @@ import tensorflow as tf
 print("3/" + str(count_libraries) + " loaded")
 import tensorflow_datasets as tfds
 print("4/" + str(count_libraries) + " loaded")
-print("Libraries has been loaded in " + str(time.time() - current_time) + "s")
+# from  import ImageDataGenerator
+print("5/" + str(count_libraries) + " loaded")
+from tqdm import tqdm
+print("6/" + str(count_libraries) + " loaded")
 
-ds, metadata = tfds.load('mnist', data_dir="./Datasets/", as_supervised=True, with_info=True, shuffle_files=True)
-# assert isinstance(ds, tf.data.Dataset)
-# print(ds)
+os.environ['PYTHONPATH'] = './src/'#For import Generalities
+from Generalities import normalize
+from Generalities import BATCH_SIZE
+print("7/" + str(count_libraries) + " loaded")
 
-trainer_data = ds['train']
+print("Libraries has been loaded in " + str(time.time() - init_time) + "s")
 
-names_of_clases = metadata.features['label'].names
-
-# print("names of the classes" + str(names_of_clases))
-
-def normalize(image, label):
-  image = tf.cast(image, tf.float32)
-  image /= 255
-  return image, label
-
-trainer_data = trainer_data.map(normalize)
-
-# for image, label in trainer_data.take(1):
-#   break
-# image = image.numpy().reshape((28, 28))
-
-# plt.figure()
-# plt.imshow(image, cmap=plt.cm.binary)
-# plt.colorbar()
-# plt.grid(False)
-# plt.show()
-
-# plt.figure(figsize=(10, 10))
-# for i, (image, label) in enumerate(trainer_data.take(25)):
-#   image = image.numpy().reshape((28, 28))
-#   plt.subplot(5, 5, i + 1)
-#   plt.xticks([])
-#   plt.yticks([])
-#   plt.grid(False)
-#   plt.imshow(image, cmap=plt.cm.binary)
-#   plt.xlabel(names_of_clases[label])
-# plt.show()
-
+#Struct of the neural network
 model = tf.keras.Sequential([
-    tf.keras.layers.Conv2D(32, (3, 3), input_shape=(28, 28, 1), activation="relu"),
+      tf.keras.layers.Input(shape=(28, 28, 1)),
+    tf.keras.layers.Conv2D(32, (3, 3), activation="relu", kernel_initializer="he_normal", name="conv1"),
     tf.keras.layers.MaxPooling2D(2, 2),
 
-    tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
+    tf.keras.layers.Conv2D(64, (3, 3), activation="relu", kernel_initializer="he_normal", name="conv2"),
+    tf.keras.layers.MaxPooling2D(2, 2),
+
+    tf.keras.layers.Conv2D(128, (3,3), activation='relu', kernel_initializer="he_normal", name="conv3"),
     tf.keras.layers.MaxPooling2D(2, 2),
 
     tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(100, activation=tf.nn.relu),
-    tf.keras.layers.Dense(10, activation=tf.nn.softmax),
+    tf.keras.layers.Dense(250, activation=tf.nn.relu),
+    tf.keras.layers.Dense(10, activation='softmax'),
 
-    # tf.keras.layers.Flatten(input_shape=(28, 28, 1)),
-    # tf.keras.layers.Dense(50, activation=tf.nn.relu),
-    # tf.keras.layers.Dense(10, activation=tf.nn.relu),
-    # tf.keras.layers.Dense(10, activation=tf.nn.softma x),
+    # tf.keras.layers.Input(shape=(28, 28, 1)),
+    # tf.keras.layers.Conv2D(32, (3,3), activation='relu'),
+    # tf.keras.layers.MaxPooling2D(2, 2),
+    # tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+    # tf.keras.layers.MaxPooling2D(2, 2),
+    # tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
+    # tf.keras.layers.MaxPooling2D(2, 2),
+
+    # tf.keras.layers.Dropout(0.5),
+    # tf.keras.layers.Flatten(),
+    # tf.keras.layers.Dense(250, activation='relu'),
+    # tf.keras.layers.Dense(1, activation='softmax')
 ])
 
-model.compile(
-    optimizer='adam',
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-    metrics=['accuracy']
+#Construct the neural network
+model.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+              metrics=['accuracy'])
+
+
+print("Getting dataset...")
+
+#tfs.load flags
+#data_dir is the dir where the dataset are downloaded
+#as_supervised is for the ds give image and label
+#with_info is for the function return metadata too
+#shuffle_files is for shufle data
+ds, metadata = tfds.load('mnist', data_dir="./Datasets/", as_supervised=True, with_info=True, shuffle_files=True)
+
+print("Dataset has downloaded.")
+
+trainer_data = ds['train']
+trainer_data = trainer_data.cache() #Pass to the cache for more velocity
+
+#Geting names of the clasess
+names_of_clases = metadata.features['label'].names
+
+trainer_data = trainer_data.map(normalize)
+
+print("passing dataset to np array")
+
+#Convert Dataset to np Array
+trainer_data_images_np = []
+trainer_data_labels_np = []
+
+for image, label in tqdm(trainer_data, total=len(trainer_data), desc="Converting to numpy", colour='#00ff00', ncols=100):
+  trainer_data_images_np.append(image.numpy())
+  trainer_data_labels_np.append(label.numpy())
+trainer_data_images_np = np.array(trainer_data_images_np)
+trainer_data_labels_np = np.array(trainer_data_labels_np)
+
+print("Dataset has been converted correctly.")
+
+# Define data generator with my flags
+datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+    rotation_range=30,  # Range of the random rotation
+    width_shift_range=0.25,  # Desplazamiento horizontal aleatorio
+    height_shift_range=0.25,  # Desplazamiento vertical aleatorio
+    shear_range=0.1,  # Estiramiento aleatorio
+    zoom_range=[0.5, 1.5],  # Rango de zoom aleatorio
+    horizontal_flip=False,  # Volteo horizontal aleatorio
+    vertical_flip=False,  # Volteo vertical aleatorio
+    fill_mode='nearest'  # Método de relleno para píxeles nuevos generados
 )
 
-import math
+#Make some changes over images
+datagen.fit(trainer_data_images_np)
 
-SIZE_OF_BATCH = 32
+# Apply transforms and generate batchs
+trainer_data = datagen.flow(
+    trainer_data_images_np,
+    trainer_data_labels_np,
+    batch_size=BATCH_SIZE,
+    shuffle=True
+)
 
-trainer_data = trainer_data.repeat().shuffle(metadata.splits['train'].num_examples).batch(SIZE_OF_BATCH)
 
-history = model.fit(trainer_data, epochs=50, steps_per_epoch=math.ceil(metadata.splits['train'].num_examples/SIZE_OF_BATCH))
+print("DS LEN " + str(len(trainer_data)))
+
+history = model.fit(
+                    trainer_data,
+                    batch_size=BATCH_SIZE,
+                    # validation_split=0.15,
+                    epochs=TRAINING_EPOCHS,
+                    steps_per_epoch=int(np.ceil(len(trainer_data)/BATCH_SIZE))
+                   )
+
+
+model.save("ModelNumbers.h5")
+
+print("The program has been runned in " + str(time.time() - init_time) + "s")
 
 plt.xlabel("# Epoch")
 plt.ylabel("# Lost magnitude")
 plt.plot(history.history["loss"])
-
-model.save("ModelNumbers.h5")
-
-#En el terminal
-# !pip install tensorflowjs
-# !mkdir tfjs_target_dir
-# !tensorflowjs_converter --input_format keras ModelNumbers.h5 tfjs_target_dir
-# !ls
-
-print("The program has been runned in " + str(time.time() - current_time) + "s")
+plt.show()
