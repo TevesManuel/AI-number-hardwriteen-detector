@@ -10,7 +10,7 @@ function clean_function() {
     ctx1.clearRect(0, 0, canvas.width, canvas.height);
     drawingcanvas.clear();
 }
-
+setInterval(predict_function, 20);
 function predict_function() {
     document.getElementById("output").innerHTML = "Processing...";
     
