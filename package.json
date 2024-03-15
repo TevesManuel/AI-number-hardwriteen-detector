@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "@tensorflow/tfjs-converter": "^4.17.0",
+    "@tensorflow/tfjs-node": "^4.17.0"
+  },
+  "name": "ai-number-hardwriteen-detector",
+  "version": "1.0.0",
+  "main": "./src/Converter/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TevesManuel/AI-number-hardwriteen-detector.git"
+  },
+  "author": "Manuel Teves",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TevesManuel/AI-number-hardwriteen-detector/issues"
+  },
+  "homepage": "https://github.com/TevesManuel/AI-number-hardwriteen-detector#readme",
+  "description": ""
+}

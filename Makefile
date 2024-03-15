@@ -4,7 +4,7 @@ tojs:
 	tensorflowjs_converter --input_format keras ModelNumbers.h5 tfjs
 	ls
 convert:
-	python ./src/Converter/app.py
+	node ./src/Converter/app.js
 view_struct:
 	python ./src/Trainer/summary.py
 deps:

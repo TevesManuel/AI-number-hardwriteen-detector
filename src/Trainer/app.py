@@ -1,4 +1,3 @@
-
 #Epochs of the training
 TRAINING_EPOCHS = 1000
 
